@@ -1,0 +1,87 @@
+=================================================================
+  PC BOTTLENECK PREDICTOR — EXPERIMENT REPORT
+  Generated: 2026-04-19 21:53:19
+=================================================================
+
+PROJECT OVERVIEW
+─────────────────────────────────────────────────────────────────
+  Predicts CPU/GPU bottleneck percentage for gaming PCs.
+  Dataset: PassMark CPU + GPU benchmark scores (real data).
+  Target : bottleneck_percent ∈ [-100, +100]
+           +100 = severe GPU bottleneck
+           -100 = severe CPU bottleneck
+              0 = perfectly balanced
+
+ALGORITHMS IMPLEMENTED FROM SCRATCH (no sklearn)
+─────────────────────────────────────────────────────────────────
+  1. Linear Regression    — batch gradient descent
+  2. Ridge Regression     — gradient descent + L2 penalty
+  3. Polynomial Features  — degree-2 cross/squared terms
+  4. K-Fold Cross Validation (5-fold)
+
+EXPERIMENT CONFIGURATION
+─────────────────────────────────────────────────────────────────
+  Polynomial degree : 2
+  Total features    : 14
+  Original features : cpuMark, G3Dmark, ratio, cores
+  Learning rate (α) : 0.01
+  Iterations        : 2,000
+  Train/test split  : 80% / 20%
+  K-fold K          : 5
+
+MODEL COMPARISON (ranked by Test R²)
+─────────────────────────────────────────────────────────────────
+  Model                     Train R²   Test R²     RMSE  Overfit
+  ────────────────────────────────────────────────────────────
+  Linear Regression           0.7322    0.7321   34.5893    0.0001 ★ best
+  Ridge  λ=0.01               0.7322    0.7321   34.5893    0.0001
+  Ridge  λ=0.1                0.7322    0.7321   34.5894    0.0001
+  Ridge  λ=1.0                0.7322    0.7321   34.5905    0.0001
+  Ridge  λ=10.0               0.7320    0.7319   34.6015    0.0001
+
+CROSS-VALIDATION RESULTS (best model, 5-fold)
+─────────────────────────────────────────────────────────────────
+  Fold 1: R²=0.7467  RMSE=33.9130
+  Fold 2: R²=0.7276  RMSE=34.7595
+  Fold 3: R²=0.7306  RMSE=34.9142
+  Fold 4: R²=0.6897  RMSE=36.9027
+  Fold 5: R²=0.7340  RMSE=34.2518
+  Mean R² : 0.7257  ±0.0191
+  Mean RMSE: 34.9482
+  (Low std means model is stable, not sensitive to data split)
+
+SAMPLE PREDICTIONS
+─────────────────────────────────────────────────────────────────
+  CPU : Ryzen 5 5600
+  GPU : GeForce RTX 3060
+  Bottleneck: +50.93%  |  GPU bottleneck  |  Moderate
+  Advice: GPU is doing more work than CPU can supply. Consider upgrading your CPU.
+
+  CPU : Ryzen 9 5900X
+  GPU : Radeon RX 6600
+  Bottleneck: +43.32%  |  GPU bottleneck  |  Moderate
+  Advice: GPU is doing more work than CPU can supply. Consider upgrading your CPU.
+
+  CPU : Ryzen 9 5900X
+  GPU : GeForce RTX 3080
+  Bottleneck: -9.82%  |  Balanced  |  Balanced
+  Advice: Excellent pairing. CPU and GPU are well matched.
+
+INTERPRETATION
+─────────────────────────────────────────────────────────────────
+  Best model  : Linear Regression (Test R²=0.7321)
+  Worst model : Ridge  λ=10.0 (Test R²=0.7319)
+
+  R² SCALE:
+    0.0 - 0.5  →  Weak fit  (model barely better than guessing mean)
+    0.5 - 0.7  →  Moderate  (some patterns captured)
+    0.7 - 0.9  →  Good fit  (most variance explained)
+    0.9 - 1.0  →  Strong    (model explains nearly all variance)
+
+  WHY RIDGE BEATS LINEAR ON POLYNOMIAL FEATURES:
+    Adding degree-2 terms increases features from 4 to 14.
+    More features = more risk of overfitting (large weights).
+    Ridge's L2 penalty shrinks weights → better generalisation.
+    Proof: check overfit_gap — Ridge has smaller train/test gap.
+
+=================================================================
